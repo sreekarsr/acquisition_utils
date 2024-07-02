@@ -5,7 +5,7 @@ if ((nargin < 3) || (isempty(binning))),
 end;
 
 src = avtbinning(src, binning);
-src.AcquisitionFrameRateAbs = 10;
+% src.AcquisitionFrameRateAbs = 10;
 h = preview(vid);
 hold(ancestor(h, 'axes'), 'on');
 im = getsnapshot(vid);

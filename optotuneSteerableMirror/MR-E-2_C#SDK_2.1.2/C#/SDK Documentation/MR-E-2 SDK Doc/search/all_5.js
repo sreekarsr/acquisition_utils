@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['loadsnapshot_69',['LoadSnapshot',['../interface_mr_e2_module_sdk_1_1_device_1_1_i_snapshot_manager.html#af3fe82e27742cd63ad24a6141bc216b4',1,'MrE2ModuleSdk.Device.ISnapshotManager.LoadSnapshot()'],['../class_mr_e2_module_sdk_1_1_device_1_1_mr_e2_for_mr15_dash30_sdk_com_device_controller.html#a7ac6df5d6e7ec52276ef3cfabd2e0df3',1,'MrE2ModuleSdk.Device.MrE2ForMr15Dash30SdkComDeviceController.LoadSnapshot()']]],
+  ['lockmirroreepromwriting_70',['LockMirrorEepromWriting',['../interface_mr_e2_module_sdk_1_1_device_1_1_i_device_eeprom.html#a6fa4b28d4552b0b44542ca5ca83b877b',1,'MrE2ModuleSdk.Device.IDeviceEeprom.LockMirrorEepromWriting()'],['../class_mr_e2_module_sdk_1_1_device_1_1_mr_e2_for_mr15_dash30_sdk_com_device_controller.html#a3d4fe1bb4653632693787036b3617aa5',1,'MrE2ModuleSdk.Device.MrE2ForMr15Dash30SdkComDeviceController.LockMirrorEepromWriting()']]],
+  ['lockwriting_71',['LockWriting',['../interface_mr_e2_module_sdk_1_1_device_1_1_i_board_eeprom.html#a672718ecf66301ca62a0a6984744886d',1,'MrE2ModuleSdk.Device.IBoardEeprom.LockWriting()'],['../class_mr_e2_module_sdk_1_1_device_1_1_mr_e2_for_mr15_dash30_sdk_com_device_controller.html#a4c3e6caa4fdb34e50b05e9ed56afb480',1,'MrE2ModuleSdk.Device.MrE2ForMr15Dash30SdkComDeviceController.LockWriting()']]]
+];

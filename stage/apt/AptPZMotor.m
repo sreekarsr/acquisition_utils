@@ -2,7 +2,6 @@ classdef AptPZMotor < handle
     properties (Constant)
         MOTOR_PROGID = 'APTPZMOTOR.APTPZMotorCtrl.1', % Note: this is what works for new KIM101 piezo controllers. See the APT Server help file for details.
         CHAN1_ID = 0,
-        CONVERSION = 3; % Volt / um
     end
      
     properties (SetAccess = public)
@@ -37,7 +36,7 @@ classdef AptPZMotor < handle
             % Move to an absolute lcoation 
             %TODO: add safety constraint to make sure it does not go beyond
             %the edge? Or does not move too far relative to zero?
-                  obj.ctrl.MoveAbsoluteStepsEx(AptPZMotor.CHAN1_ID,loc,true)
+                  obj.ctrl.MoveAbsoluteStepsEx(AptPZMotor.CHAN1_ID,loc,true);
         end
 
         function [] = translate(obj, steps)
