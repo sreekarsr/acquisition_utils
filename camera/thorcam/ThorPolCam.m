@@ -17,6 +17,7 @@ classdef ThorPolCam < handle
         polarizationProcessor
         polarPhase
         maxPixelValue
+        defaultprocess = 'intensity';
     end
 
     methods
@@ -95,7 +96,8 @@ classdef ThorPolCam < handle
             end
         end
 
-        function roi = getROI(h)
+        function roi = ROIPosition(h)
+            % mirroring the function header for videoinput objects
             roi = [h.tlCamera.ROIAndBin.ROIOriginX_pixels,...
                 h.tlCamera.ROIAndBin.ROIOriginY_pixels,...
                 h.tlCamera.ROIAndBin.ROIWidth_pixels,...
@@ -124,8 +126,20 @@ classdef ThorPolCam < handle
             avlbl = (h.tlCamera.NumberOfQueuedFrames > 0);
         end
 
-        function image2D = getsnapshot(h, process)
-             if (h.frames_available)
+        function image2D = getsnapshot(h, varargin)
+            if(nargin>1)
+                process = varargin{1};
+            else
+                process = h.defaultprocess;
+            end
+
+            if(~h.frames_available)
+                waittime = 5 * h.tlCamera.ExposureTime_us * 1e-6;
+                 warning('No frame available. waiting for 5x exposuretime : %g s', waittime)
+                 pause(waittime);
+            end
+
+            if(h.frames_available)
                  imageFrame = h.tlCamera.GetPendingFrameOrNull;
 %                   frameCount = frameCount + 1;
                 % For color images, the image data is in BGR format.
@@ -147,7 +161,7 @@ classdef ThorPolCam < handle
                     h.polarizationProcessor.TransformToIntensity(h.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
                         bitDepth, maxOutput, outputData);
                     % Reshape to 2D
-                    image2D = reshape(uint16(outputData), [imageWidth, imageHeight]);
+                    image2D = reshape(uint16(outputData), [imageWidth, imageHeight])';
                     
                 elseif(strcmpi(process, 'DoLP'))
                     % Calculate degree of linear polarization (DoLP)
@@ -156,7 +170,7 @@ classdef ThorPolCam < handle
                     imageDoLPData = double(outputData) / double(maxOutput) * 100;
                     
                     % Display the DoLP image
-                    image2D = reshape(imageDoLPData, [imageWidth, imageHeight]);
+                    image2D = reshape(imageDoLPData, [imageWidth, imageHeight])';
                     
                 elseif(strcmpi(process,'azimuth'))
                     h.polarizationProcessor.TransformToAzimuth(h.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
@@ -165,7 +179,7 @@ classdef ThorPolCam < handle
                     % Convert the angle data to degrees (-90 to 90 degrees)
                     imageAngleData = double(outputData) / double(maxOutput) * 180 - 90;
                     % Display the Azimuth image
-                    image2D = reshape(imageAngleData, [imageWidth, imageHeight]);
+                    image2D = reshape(imageAngleData, [imageWidth, imageHeight])';
 
                 else
                     error('Unknown process "%s" specified', process)
@@ -173,8 +187,8 @@ classdef ThorPolCam < handle
                 
                 % Release the image frame
                 delete(imageFrame);
-             else
-                 error('No frame available');
+            else
+                error('No frame available even after waiting for 5x exposure.');
              end
 
         end
