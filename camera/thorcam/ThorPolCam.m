@@ -126,24 +126,30 @@ classdef ThorPolCam < handle
             avlbl = (h.tlCamera.NumberOfQueuedFrames > 0);
         end
 
-        function image2D = getsnapshot(h, varargin)
+        function image2D = getsnapshot(hobj, varargin)
             if(nargin>1)
                 process = varargin{1};
             else
-                process = h.defaultprocess;
+                process = hobj.defaultprocess;
             end
 
-            if(~h.frames_available)
-                waittime = 5 * h.tlCamera.ExposureTime_us * 1e-6;
+            if(~hobj.frames_available)
+                waittime = 5 * hobj.tlCamera.ExposureTime_us * 1e-6;
                  warning('No frame available. waiting for 5x exposuretime : %g s', waittime)
                  pause(waittime);
             end
 
-            if(h.frames_available)
-                 imageFrame = h.tlCamera.GetPendingFrameOrNull;
+            if(hobj.frames_available)
+                 imageFrame = hobj.tlCamera.GetPendingFrameOrNull;
 %                   frameCount = frameCount + 1;
                 % For color images, the image data is in BGR format.
+                try
                 imageData = imageFrame.ImageData.ImageData_monoOrBGR;
+                catch
+                    disp('imageFrame')
+                    disp(imageFrame);
+                    error('Something wrong with this statement (dot indexing not supported error')
+                end
                 
 %                 disp(['Image frame number: ' num2str(imageFrame.FrameNumber)]);
                 
@@ -158,14 +164,14 @@ classdef ThorPolCam < handle
 
                 if(strcmpi(process, 'intensity'))
                     % Calculate the Intensity image.
-                    h.polarizationProcessor.TransformToIntensity(h.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
+                    hobj.polarizationProcessor.TransformToIntensity(hobj.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
                         bitDepth, maxOutput, outputData);
                     % Reshape to 2D
                     image2D = reshape(uint16(outputData), [imageWidth, imageHeight])';
                     
                 elseif(strcmpi(process, 'DoLP'))
                     % Calculate degree of linear polarization (DoLP)
-                    h.polarizationProcessor.TransformToDoLP(h.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
+                    hobj.polarizationProcessor.TransformToDoLP(hobj.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
                                             bitDepth, maxOutput, outputData);
                     imageDoLPData = double(outputData) / double(maxOutput) * 100;
                     
@@ -173,7 +179,7 @@ classdef ThorPolCam < handle
                     image2D = reshape(imageDoLPData, [imageWidth, imageHeight])';
                     
                 elseif(strcmpi(process,'azimuth'))
-                    h.polarizationProcessor.TransformToAzimuth(h.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
+                    hobj.polarizationProcessor.TransformToAzimuth(hobj.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
                     bitDepth, maxOutput, outputData);
                                         
                     % Convert the angle data to degrees (-90 to 90 degrees)
