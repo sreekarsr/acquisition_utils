@@ -126,7 +126,7 @@ classdef ThorPolCam < handle
             avlbl = (h.tlCamera.NumberOfQueuedFrames > 0);
         end
 
-        function image2D = getsnapshot(hobj, varargin)
+        function outImage = getsnapshot(hobj, varargin)
             if(nargin>1)
                 process = varargin{1};
             else
@@ -167,7 +167,7 @@ classdef ThorPolCam < handle
                     hobj.polarizationProcessor.TransformToIntensity(hobj.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
                         bitDepth, maxOutput, outputData);
                     % Reshape to 2D
-                    image2D = reshape(uint16(outputData), [imageWidth, imageHeight])';
+                    outImage = reshape(uint16(outputData), [imageWidth, imageHeight])';
                     
                 elseif(strcmpi(process, 'DoLP'))
                     % Calculate degree of linear polarization (DoLP)
@@ -176,7 +176,7 @@ classdef ThorPolCam < handle
                     imageDoLPData = double(outputData) / double(maxOutput) * 100;
                     
                     % Display the DoLP image
-                    image2D = reshape(imageDoLPData, [imageWidth, imageHeight])';
+                    outImage = reshape(imageDoLPData, [imageWidth, imageHeight])';
                     
                 elseif(strcmpi(process,'azimuth'))
                     hobj.polarizationProcessor.TransformToAzimuth(hobj.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
@@ -185,8 +185,15 @@ classdef ThorPolCam < handle
                     % Convert the angle data to degrees (-90 to 90 degrees)
                     imageAngleData = double(outputData) / double(maxOutput) * 180 - 90;
                     % Display the Azimuth image
-                    image2D = reshape(imageAngleData, [imageWidth, imageHeight])';
+                    outImage = reshape(imageAngleData, [imageWidth, imageHeight])';
 
+                elseif(strcmpi(process,'quad'))
+                    image2D = reshape(uint16(imageData), [imageWidth, imageHeight])';
+                    outImage = zeros([imageHeight/2 imageWidth/2 4],'uint16');
+                    outImage(:,:,1) = image2D(1:2:end,1:2:end);
+                    outImage(:,:,2) = image2D(2:2:end,1:2:end);
+                    outImage(:,:,3) = image2D(1:2:end,2:2:end);
+                    outImage(:,:,4) = image2D(2:2:end,2:2:end);
                 else
                     error('Unknown process "%s" specified', process)
                 end
