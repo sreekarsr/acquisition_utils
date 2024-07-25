@@ -135,6 +135,7 @@ classdef ThorPolCam < handle
 
             if(~hobj.frames_available)
                 waittime = 5 * hobj.tlCamera.ExposureTime_us * 1e-6;
+                waittime = min(waittime,1);
                  warning('No frame available. waiting for 5x exposuretime : %g s', waittime)
                  pause(waittime);
             end
