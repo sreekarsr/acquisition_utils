@@ -13,6 +13,9 @@ classdef ISSI < handle
     
     methods
         function obj = ISSI(ip)
+            if(nargin < 1)
+                ip = '192.168.2.252';
+            end
             obj.ip = ip;
             obj.u = udpport("datagram", "IPV4");
             fprintf('Connected to %s\n',obj.getver);
@@ -41,6 +44,7 @@ classdef ISSI < handle
         end
 
         function flims = focusInit(obj)
+            disp('Initializing focusing range..')
             obj.u.flush();
             obj.write("refRange");
             dg = obj.u.read(1,"string");

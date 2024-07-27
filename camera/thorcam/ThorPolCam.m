@@ -126,7 +126,14 @@ classdef ThorPolCam < handle
             avlbl = (h.tlCamera.NumberOfQueuedFrames > 0);
         end
 
-        function outImage = getsnapshot(hobj, varargin)
+        function exposureTime = getExposureTime(hobj)
+            exposureTime = hobj.tlCamera.ExposureTime_us;
+        end
+
+        function [outImage,image2DRaw] = getsnapshot(hobj, varargin)
+            exptimeSec = hobj.tlCamera.ExposureTime_us * 1e-6;
+            pause(exptimeSec * 1.1); % wait for capture time
+
             if(nargin>1)
                 process = varargin{1};
             else
@@ -135,7 +142,7 @@ classdef ThorPolCam < handle
 
             if(~hobj.frames_available)
                 waittime = 5 * hobj.tlCamera.ExposureTime_us * 1e-6;
-                waittime = min(waittime,1);
+                waittime = min(waittime,3);
                  warning('No frame available. waiting for 5x exposuretime : %g s', waittime)
                  pause(waittime);
             end
@@ -163,6 +170,11 @@ classdef ThorPolCam < handle
                 % Allocate memory for processed Intensity image output.
                 outputData = NET.createArray('System.UInt16',imageHeight * imageWidth);
 
+                % return raw data as well if requested
+                if(strcmpi(process,'quad') || nargout > 1)
+                    image2DRaw = reshape(uint16(imageData), [imageWidth, imageHeight])';
+                end
+
                 if(strcmpi(process, 'intensity'))
                     % Calculate the Intensity image.
                     hobj.polarizationProcessor.TransformToIntensity(hobj.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
@@ -189,12 +201,11 @@ classdef ThorPolCam < handle
                     outImage = reshape(imageAngleData, [imageWidth, imageHeight])';
 
                 elseif(strcmpi(process,'quad'))
-                    image2D = reshape(uint16(imageData), [imageWidth, imageHeight])';
                     outImage = zeros([imageHeight/2 imageWidth/2 4],'uint16');
-                    outImage(:,:,1) = image2D(1:2:end,1:2:end);
-                    outImage(:,:,2) = image2D(2:2:end,1:2:end);
-                    outImage(:,:,3) = image2D(1:2:end,2:2:end);
-                    outImage(:,:,4) = image2D(2:2:end,2:2:end);
+                    outImage(:,:,1) = image2DRaw(1:2:end,1:2:end);
+                    outImage(:,:,2) = image2DRaw(2:2:end,1:2:end);
+                    outImage(:,:,3) = image2DRaw(1:2:end,2:2:end);
+                    outImage(:,:,4) = image2DRaw(2:2:end,2:2:end);
                 else
                     error('Unknown process "%s" specified', process)
                 end
