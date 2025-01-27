@@ -20,7 +20,8 @@ classdef ISSI < handle
             obj.u = udpport("datagram", "IPV4");
             fprintf('Connected to %s\n',obj.getver);
             obj.ping;
-            obj.focuslims = focusInit(obj); % initialize and identify focusing range (doesn't raise error on its own if going out of range)
+            disp('Call focusInit() to initialise focusing range')
+%             obj.focuslims = focusInit(obj); % initialize and identify focusing range (doesn't raise error on its own if going out of range)
         end
         
         function verstr = getver(obj)

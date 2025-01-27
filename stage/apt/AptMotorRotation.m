@@ -50,17 +50,42 @@ classdef AptMotorRotation < handle
         
 		function [] = goto(obj, angleInDegrees)
 			obj.ctrl.MoveAbsoluteRot(AptMotorRotation.CHAN1_ID,...
-									angleInDegrees, 0,...
+									mod(angleInDegrees,360), 0,...
 									obj.rotMove, true);
 		end
 
 		function [] = rotate(obj, angleInDegrees)
 			obj.ctrl.MoveRelativeEx(AptMotorRotation.CHAN1_ID,...
 									angleInDegrees, 0, true);
-		end
+        end
+
+        function [] = kbrotate(obj, step)
+              fprintf('Control stage using the keys A (+angle) and D (-angle). Step size : %f deg, Use m and n to increase or decrease step size.',step);
+            while(1)
+                ch = char(getkey);
+                switch lower(ch)
+                    case  'a'
+                        obj.goto(obj.getpos - step);
+                    case 'd'
+                        obj.goto(obj.getpos + step);
+                    case 'm'
+                        if step *10> 20
+                            disp('cannot increase step size over 20');
+                        else
+                            step = step * 10;
+                            fprintf('Step size : %g deg\n',step);
+                        end
+                    case 'n'
+                        step = step / 10;                            
+                        fprintf('Step size : %g deg',step);
+                    otherwise
+                        break
+                end
+            end
+        end
         
 		function pos = getpos(obj)
-			pos = obj.ctrl.GetAbsMovePos_AbsPos(AptMotorRotation.CHAN1_ID);
+			pos = mod(obj.ctrl.GetAbsMovePos_AbsPos(AptMotorRotation.CHAN1_ID),360);
 		end
 		
 		function [] = setrotparams(obj, rotMove)

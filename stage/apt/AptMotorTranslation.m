@@ -44,7 +44,7 @@ classdef AptMotorTranslation < handle
 			obj.maxVel = maxVel;
             obj.ctrl.EnableHWChannel(obj.CHAN1_ID);
 
-            obj.frontlimit = 205.0;
+            obj.frontlimit = 208.0;
 
         end
 

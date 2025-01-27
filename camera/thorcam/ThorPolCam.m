@@ -135,14 +135,14 @@ classdef ThorPolCam < handle
             pause(exptimeSec * 1.1); % wait for capture time
 
             if(nargin>1)
-                process = varargin{1};
+                process = char(varargin{1});
             else
                 process = hobj.defaultprocess;
             end
 
             if(~hobj.frames_available)
                 waittime = 5 * hobj.tlCamera.ExposureTime_us * 1e-6;
-                waittime = min(waittime,3);
+                waittime = max(waittime,1);
                  warning('No frame available. waiting for 5x exposuretime : %g s', waittime)
                  pause(waittime);
             end
@@ -151,12 +151,19 @@ classdef ThorPolCam < handle
                  imageFrame = hobj.tlCamera.GetPendingFrameOrNull;
 %                   frameCount = frameCount + 1;
                 % For color images, the image data is in BGR format.
+                if(numel(imageFrame)==0)
+                    disp('Null Frame')
+                    outImage = nan;
+                    image2DRaw = nan;
+                    return
+                end
                 try
-                imageData = imageFrame.ImageData.ImageData_monoOrBGR;
+
+                    imageData = imageFrame.ImageData.ImageData_monoOrBGR;
                 catch
-                    disp('imageFrame')
-                    disp(imageFrame);
-                    error('Something wrong with this statement (dot indexing not supported error')
+%                     disp('imageFrame')
+                    disp(class(imageFrame));
+%                     error('Something wrong with this statement (dot indexing not supported error')
                 end
                 
 %                 disp(['Image frame number: ' num2str(imageFrame.FrameNumber)]);
@@ -171,11 +178,13 @@ classdef ThorPolCam < handle
                 outputData = NET.createArray('System.UInt16',imageHeight * imageWidth);
 
                 % return raw data as well if requested
-                if(strcmpi(process,'quad') || nargout > 1)
+                if(strcmpi(process(1:3),'qua') || strcmpi(process,'raw')|| nargout > 1)
                     image2DRaw = reshape(uint16(imageData), [imageWidth, imageHeight])';
                 end
 
-                if(strcmpi(process, 'intensity'))
+                if(strcmpi(process,'raw'))
+                    outImage = image2DRaw;
+                elseif(strcmpi(process, 'intensity'))
                     % Calculate the Intensity image.
                     hobj.polarizationProcessor.TransformToIntensity(hobj.polarPhase, imageData, int32(0), int32(0), imageWidth, imageHeight, ...
                         bitDepth, maxOutput, outputData);
@@ -200,12 +209,22 @@ classdef ThorPolCam < handle
                     % Display the Azimuth image
                     outImage = reshape(imageAngleData, [imageWidth, imageHeight])';
 
-                elseif(strcmpi(process,'quad'))
-                    outImage = zeros([imageHeight/2 imageWidth/2 4],'uint16');
-                    outImage(:,:,1) = image2DRaw(1:2:end,1:2:end);
-                    outImage(:,:,2) = image2DRaw(2:2:end,1:2:end);
-                    outImage(:,:,3) = image2DRaw(1:2:end,2:2:end);
-                    outImage(:,:,4) = image2DRaw(2:2:end,2:2:end);
+                elseif(strcmpi(process(1:3),'qua'))
+                    if(strcmpi(process,'quad0'))
+                        outImage =  image2DRaw(1:2:end,1:2:end);
+                    elseif(strcmpi(process,'quad1'))
+                        outImage =  image2DRaw(2:2:end,1:2:end);
+                    elseif(strcmpi(process,'quad2'))                        
+                        outImage =   image2DRaw(1:2:end,2:2:end);
+                    elseif(strcmpi(process,'quad3'))                        
+                        outImage =   image2DRaw(2:2:end,2:2:end);
+                    else                    
+                        outImage = zeros([imageHeight/2 imageWidth/2 4],'uint16');
+                        outImage(:,:,1) = image2DRaw(1:2:end,1:2:end);
+                        outImage(:,:,2) = image2DRaw(2:2:end,1:2:end);
+                        outImage(:,:,3) = image2DRaw(1:2:end,2:2:end);
+                        outImage(:,:,4) = image2DRaw(2:2:end,2:2:end);
+                    end
                 else
                     error('Unknown process "%s" specified', process)
                 end
@@ -213,7 +232,10 @@ classdef ThorPolCam < handle
                 % Release the image frame
                 delete(imageFrame);
             else
-                error('No frame available even after waiting for 5x exposure.');
+                warning('No frame available even after waiting for 5x exposure.');
+                outImage = nan;                    
+                image2DRaw = nan;
+                return
              end
 
         end
